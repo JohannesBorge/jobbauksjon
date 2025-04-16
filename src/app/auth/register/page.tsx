@@ -23,6 +23,8 @@ function RegisterForm() {
     setLoading(true);
 
     try {
+      console.log('Starting registration process...');
+      
       // Register the user
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
@@ -36,16 +38,19 @@ function RegisterForm() {
       });
 
       if (authError) {
-        console.error('Auth error:', authError);
+        console.error('Auth error details:', authError);
         throw authError;
       }
 
       if (!authData.user) {
+        console.error('No user data returned from registration');
         throw new Error('No user data returned from registration');
       }
 
+      console.log('User registered successfully:', authData.user.id);
+
       // Create profile
-      const { error: profileError } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .insert([
           {
@@ -54,18 +59,22 @@ function RegisterForm() {
             role: formData.role,
             email: formData.email,
           },
-        ]);
+        ])
+        .select()
+        .single();
 
       if (profileError) {
-        console.error('Profile creation error:', profileError);
+        console.error('Profile creation error details:', profileError);
         throw profileError;
       }
+
+      console.log('Profile created successfully:', profileData);
 
       // Show success message and redirect to login
       alert('Registration successful! Please check your email to verify your account.');
       router.push('/auth/login');
     } catch (error) {
-      console.error('Registration error:', error);
+      console.error('Full registration error:', error);
       if (error instanceof Error) {
         setError(error.message);
       } else {
