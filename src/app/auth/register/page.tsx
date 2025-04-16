@@ -22,6 +22,15 @@ function RegisterForm() {
     setLoading(true);
 
     try {
+      // Validate form data
+      if (!formData.email || !formData.password || !formData.name) {
+        throw new Error('Please fill in all fields');
+      }
+
+      if (formData.password.length < 6) {
+        throw new Error('Password must be at least 6 characters long');
+      }
+
       // Register the user
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
@@ -30,19 +39,20 @@ function RegisterForm() {
           data: {
             name: formData.name,
           },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
 
       if (authError) {
         console.error('Auth error:', authError);
-        throw authError;
+        throw new Error(authError.message);
       }
 
       if (!authData.user) {
-        throw new Error('No user data returned from registration');
+        throw new Error('Registration failed. Please try again.');
       }
 
-      // Create profile with default role
+      // Create profile
       const { error: profileError } = await supabase
         .from('profiles')
         .insert([
@@ -50,16 +60,20 @@ function RegisterForm() {
             id: authData.user.id,
             name: formData.name,
             email: formData.email,
+            role: 'bidder', // Default role, can be changed later
           },
         ]);
 
       if (profileError) {
         console.error('Profile error:', profileError);
-        throw profileError;
+        // If profile creation fails, try to delete the user
+        await supabase.auth.admin.deleteUser(authData.user.id);
+        throw new Error('Failed to create profile. Please try again.');
       }
 
-      // Redirect to welcome dashboard
-      router.push('/welcome');
+      // Show success message
+      alert('Registration successful! Please check your email to verify your account.');
+      router.push('/auth/login');
     } catch (error) {
       console.error('Registration error:', error);
       if (error instanceof Error) {
@@ -140,6 +154,7 @@ function RegisterForm() {
                   type="password"
                   autoComplete="new-password"
                   required
+                  minLength={6}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
