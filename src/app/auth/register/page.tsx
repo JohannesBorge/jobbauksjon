@@ -1,14 +1,12 @@
 'use client';
 
 import { useState, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 
 function RegisterForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const role = searchParams.get('role') || 'bidder';
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   
@@ -16,7 +14,6 @@ function RegisterForm() {
     email: '',
     password: '',
     name: '',
-    role: role,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,7 +29,6 @@ function RegisterForm() {
         options: {
           data: {
             name: formData.name,
-            role: formData.role,
           },
         },
       });
@@ -46,7 +42,6 @@ function RegisterForm() {
           {
             id: authData.user?.id,
             name: formData.name,
-            role: formData.role,
             email: formData.email,
           },
         ]);
@@ -137,24 +132,6 @@ function RegisterForm() {
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700">
-                Account Type
-              </label>
-              <div className="mt-1">
-                <select
-                  id="role"
-                  name="role"
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  value={formData.role}
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                >
-                  <option value="bidder">I want to bid on jobs</option>
-                  <option value="poster">I want to post jobs</option>
-                </select>
               </div>
             </div>
 
