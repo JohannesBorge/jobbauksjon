@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import BidList from '@/components/BidList';
 import BidForm from '@/components/BidForm';
-import { Bid, Job } from '@/types/bid';
+import { Job } from '@/types/bid';
 import { mockUsers, generateRandomBid, initialJob } from '@/data/mockData';
 
 export default function Home() {
