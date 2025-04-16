@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import BidList from '@/components/BidList';
 import BidForm from '@/components/BidForm';
 import { Job } from '@/types/bid';
@@ -9,20 +9,6 @@ import { mockUsers, generateRandomBid, initialJob } from '@/data/mockData';
 export default function Home() {
   const [job, setJob] = useState<Job>(initialJob);
   const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    // Simulate real-time bidding
-    const interval = setInterval(() => {
-      const randomUser = mockUsers[Math.floor(Math.random() * mockUsers.length)];
-      const newBid = generateRandomBid(randomUser);
-      setJob((prevJob) => ({
-        ...prevJob,
-        bids: [...prevJob.bids, newBid].sort((a, b) => a.amount - b.amount),
-      }));
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, []);
 
   const handlePlaceBid = (amount: number) => {
     const currentUser = mockUsers[0]; // Simulate current user
