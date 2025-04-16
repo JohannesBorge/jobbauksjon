@@ -65,7 +65,7 @@ export default function PosterDashboard() {
 
       {jobs.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-500">You haven't posted any jobs yet.</p>
+          <p className="text-gray-500">You haven&apos;t posted any jobs yet.</p>
           <Link
             href="/jobs/new"
             className="mt-4 inline-block bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
