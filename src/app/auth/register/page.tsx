@@ -52,34 +52,22 @@ function RegisterForm() {
         throw new Error('Registration failed. Please try again.');
       }
 
-      // Wait a moment for the trigger to create the profile
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Verify the profile was created
-      const { data: profile, error: profileError } = await supabase
+      // Create profile directly
+      const { error: profileError } = await supabase
         .from('profiles')
-        .select('*')
-        .eq('id', authData.user.id)
-        .single();
+        .insert([
+          {
+            id: authData.user.id,
+            name: formData.name,
+            email: formData.email,
+            role: 'bidder',
+          },
+        ]);
 
-      if (profileError || !profile) {
-        console.error('Profile verification error:', profileError);
-        // Try to create the profile manually
-        const { error: manualProfileError } = await supabase
-          .from('profiles')
-          .insert([
-            {
-              id: authData.user.id,
-              name: formData.name,
-              email: formData.email,
-              role: 'bidder',
-            },
-          ]);
-
-        if (manualProfileError) {
-          console.error('Manual profile creation error:', manualProfileError);
-          throw new Error('Failed to create profile. Please try again.');
-        }
+      if (profileError) {
+        console.error('Profile error:', profileError);
+        // Instead of trying to delete the user, just show an error
+        throw new Error('Failed to create profile. Please try again or contact support.');
       }
 
       // Show success message
