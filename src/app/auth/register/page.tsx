@@ -52,23 +52,34 @@ function RegisterForm() {
         throw new Error('Registration failed. Please try again.');
       }
 
-      // Create profile
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert([
-          {
-            id: authData.user.id,
-            name: formData.name,
-            email: formData.email,
-            role: 'bidder', // Default role, can be changed later
-          },
-        ]);
+      // Wait a moment for the trigger to create the profile
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      if (profileError) {
-        console.error('Profile error:', profileError);
-        // If profile creation fails, try to delete the user
-        await supabase.auth.admin.deleteUser(authData.user.id);
-        throw new Error('Failed to create profile. Please try again.');
+      // Verify the profile was created
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authData.user.id)
+        .single();
+
+      if (profileError || !profile) {
+        console.error('Profile verification error:', profileError);
+        // Try to create the profile manually
+        const { error: manualProfileError } = await supabase
+          .from('profiles')
+          .insert([
+            {
+              id: authData.user.id,
+              name: formData.name,
+              email: formData.email,
+              role: 'bidder',
+            },
+          ]);
+
+        if (manualProfileError) {
+          console.error('Manual profile creation error:', manualProfileError);
+          throw new Error('Failed to create profile. Please try again.');
+        }
       }
 
       // Show success message
