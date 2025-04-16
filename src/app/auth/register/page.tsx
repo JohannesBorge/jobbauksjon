@@ -14,6 +14,7 @@ function RegisterForm() {
     email: '',
     password: '',
     name: '',
+    role: 'bidder' as 'poster' | 'bidder',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,31 +30,46 @@ function RegisterForm() {
         options: {
           data: {
             name: formData.name,
+            role: formData.role,
           },
         },
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        console.error('Auth error:', authError);
+        throw authError;
+      }
 
-      // Create user profile
+      if (!authData.user) {
+        throw new Error('No user data returned from registration');
+      }
+
+      // Create profile
       const { error: profileError } = await supabase
         .from('profiles')
         .insert([
           {
-            id: authData.user?.id,
+            id: authData.user.id,
             name: formData.name,
+            role: formData.role,
             email: formData.email,
           },
         ]);
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('Profile creation error:', profileError);
+        throw profileError;
+      }
 
-      router.push('/dashboard');
+      // Show success message and redirect to login
+      alert('Registration successful! Please check your email to verify your account.');
+      router.push('/auth/login');
     } catch (error) {
+      console.error('Registration error:', error);
       if (error instanceof Error) {
         setError(error.message);
       } else {
-        setError('An unexpected error occurred');
+        setError('An unexpected error occurred during registration');
       }
     } finally {
       setLoading(false);
@@ -132,6 +148,25 @@ function RegisterForm() {
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="role" className="block text-sm font-medium text-gray-700">
+                I want to
+              </label>
+              <div className="mt-1">
+                <select
+                  id="role"
+                  name="role"
+                  required
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  value={formData.role}
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value as 'poster' | 'bidder' })}
+                >
+                  <option value="bidder">Place bids on jobs</option>
+                  <option value="poster">Post jobs for bidding</option>
+                </select>
               </div>
             </div>
 
