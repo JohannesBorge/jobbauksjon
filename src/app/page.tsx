@@ -91,7 +91,7 @@ export default function Home() {
               <div className="text-blue-600 text-2xl mb-4">2</div>
               <h3 className="text-xl font-semibold mb-2">Place Bids</h3>
               <p className="text-gray-600">
-                Professionals place competitive bids on jobs they're interested in.
+                Professionals place competitive bids on jobs they&apos;re interested in.
               </p>
             </motion.div>
             <motion.div
