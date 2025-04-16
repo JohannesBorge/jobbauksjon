@@ -4,94 +4,86 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
-
-interface Job {
-  id: string;
-  title: string;
-  description: string;
-  status: string;
-  created_at: string;
-}
+import { Job } from '@/types/job';
 
 export default function BidderDashboard() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchJobs = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('jobs')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-        setJobs(data || []);
-      } catch (error) {
-        console.error('Error fetching jobs:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchJobs();
   }, []);
 
+  const fetchJobs = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('jobs')
+        .select('*')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setJobs(data || []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch jobs');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading available jobs...</p>
-        </div>
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-red-500 text-center p-4">
+        {error}
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Available Jobs</h1>
-        </div>
-
-        {jobs.length === 0 ? (
-          <div className="text-center py-12">
-            <h3 className="text-lg font-medium text-gray-900">No jobs available</h3>
-            <p className="mt-2 text-sm text-gray-500">
-              There are currently no jobs available to bid on.
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {jobs.map((job) => (
-              <motion.div
-                key={job.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                className="bg-white overflow-hidden shadow rounded-lg"
-              >
-                <div className="p-6">
-                  <h3 className="text-lg font-medium text-gray-900">{job.title}</h3>
-                  <p className="mt-2 text-sm text-gray-500 line-clamp-3">{job.description}</p>
-                  <div className="mt-4 flex items-center justify-between">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {job.status}
-                    </span>
-                    <Link
-                      href={`/jobs/${job.id}`}
-                      className="text-sm font-medium text-blue-600 hover:text-blue-500"
-                    >
-                      View Details
-                    </Link>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        )}
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Active Jobs</h2>
       </div>
+
+      {jobs.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-gray-500">No active jobs available at the moment.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {jobs.map((job) => (
+            <motion.div
+              key={job.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-lg shadow-md p-6"
+            >
+              <h3 className="text-xl font-semibold mb-2">{job.title}</h3>
+              <p className="text-gray-600 mb-4">{job.description}</p>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-500">
+                  Posted {new Date(job.created_at).toLocaleDateString()}
+                </span>
+                <Link
+                  href={`/jobs/${job.id}`}
+                  className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
+                >
+                  Place Bid
+                </Link>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
     </div>
   );
 } 
